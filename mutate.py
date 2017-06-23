@@ -5,6 +5,8 @@ from __future__ import print_function
 from collections import defaultdict
 import random
 import textwrap
+import argparse
+import sys
 
 import six
 import gutenberg
@@ -16,10 +18,16 @@ import nltk
 
 def main(textid):
     """do all the work"""
-    otext = gutenberg.cleanup.strip_headers(gutenberg.acquire.load_etext(textid)).strip()
 
-    if textid == 11231:
-        otext = otext.replace("BARTLEBY, THE SCRIVENER.\n\nA STORY OF WALL-STREET.", "").strip()
+    # random.seed(123)
+    if isinstance(textid, int):
+        otext = gutenberg.cleanup.strip_headers(gutenberg.acquire.load_etext(textid)).strip()
+
+        if textid == 11231:
+            otext = otext.replace("BARTLEBY, THE SCRIVENER.\n\nA STORY OF WALL-STREET.", "").strip()
+    else:
+        with open(textid) as infile:
+            otext = infile.read()
 
     # careful, what if # occurs in the original text?
     otext = otext.replace("\n\n", "#")
@@ -47,4 +55,16 @@ def main(textid):
     print(formatted_output)
 
 if __name__ == '__main__':
-    main(11231) # bartleby
+    PARSER = argparse.ArgumentParser(description="mutate text")
+    PARSER.add_argument('-g', help='input is a gutenberg text', action='store_true')
+    PARSER.add_argument('input', metavar='INPUT', type=str,
+                        help='input file or gutenberg id (if -g present)')
+    ARGS = PARSER.parse_args()
+    INPUT = ARGS.input
+    if ARGS.g:
+        try:
+            INPUT = int(ARGS.input)
+        except ValueError:
+            print("Gutenberg ID must be numeric")
+            sys.exit(1)
+    main(INPUT)
