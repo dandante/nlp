@@ -16,10 +16,11 @@ import nltk
 
 
 
-def main(textid):
+def main(textid, seed):
     """do all the work"""
 
-    # random.seed(123)
+    if seed:
+        random.seed(seed)
     if isinstance(textid, int):
         otext = gutenberg.cleanup.strip_headers(gutenberg.acquire.load_etext(textid)).strip()
 
@@ -42,13 +43,22 @@ def main(textid):
         posdict[item[1]].append(item[0])
 
     out = six.StringIO()
+    cap = True # capitalize the first word
     for item in pos:
         part = item[0]
-        if part not in ['.', ',']:
+        word = random.choice(posdict[item[1]])
+        if cap:
+            word = word.capitalize()
+            cap = False
+        if word in ['.', '!', '?']:
+            cap = True # capitalize the next word
+        elif word == ',':
+            pass
+        else:
             out.write(' ')
-        out.write(random.choice(posdict[item[1]]))
+        out.write(word)
 
-    output = textwrap.wrap(out.getvalue())
+    output = textwrap.wrap(out.getvalue().strip())
     formatted_output = "\n".join(output)
 
     formatted_output = formatted_output.replace("#", "\n\n")
@@ -59,6 +69,7 @@ if __name__ == '__main__':
     PARSER.add_argument('-g', help='input is a gutenberg text', action='store_true')
     PARSER.add_argument('input', metavar='INPUT', type=str,
                         help='input file or gutenberg id (if -g present)')
+    PARSER.add_argument('-s', help='random seed', metavar='SEED', type=int)
     ARGS = PARSER.parse_args()
     INPUT = ARGS.input
     if ARGS.g:
@@ -67,4 +78,4 @@ if __name__ == '__main__':
         except ValueError:
             print("Gutenberg ID must be numeric")
             sys.exit(1)
-    main(INPUT)
+    main(INPUT, ARGS.s)
