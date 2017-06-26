@@ -50,7 +50,7 @@ def main(textid, seed):
         if cap:
             word = word.capitalize()
             cap = False
-        if word in ['.', '!', '?']:
+        if part == '.':
             cap = True # capitalize the next word
         elif word == ',':
             pass
